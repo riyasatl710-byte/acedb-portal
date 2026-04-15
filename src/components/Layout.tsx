@@ -18,9 +18,11 @@ import {
 
 export function Layout() {
   const { user, isAuthenticated, logout } = useAuthStore();
-  const fetchData = useDataStore(state => state.fetchData);
+  const { fetchData, notifications } = useDataStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -100,10 +102,14 @@ export function Layout() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <div className="flex items-center gap-4">
-                <button className="text-slate-400 hover:text-amber-500 transition-colors relative hover:scale-110 duration-200">
+                <Link to="/settings" className="text-slate-400 hover:text-amber-500 transition-colors relative hover:scale-110 duration-200">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
-                </button>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow-sm">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Link>
                 <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                   <span className="text-sm text-slate-600">Welcome, <strong className="text-slate-900">{user?.name}</strong></span>
                   <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">

@@ -27,10 +27,20 @@ export interface SystemUser {
   role: string;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  type: 'info' | 'warning' | 'success';
+}
+
 interface DataState {
   employees: Employee[];
   schemes: Scheme[];
   users: SystemUser[];
+  notifications: AppNotification[];
   isLoading: boolean;
   error: string | null;
   
@@ -50,6 +60,11 @@ interface DataState {
   addUser: (user: Omit<SystemUser, 'id'>) => Promise<void>;
   updateUser: (id: string, user: Partial<SystemUser>) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
+
+  // Notification Actions
+  addNotification: (notification: Omit<AppNotification, 'id' | 'date' | 'read'>) => void;
+  markNotificationRead: (id: string) => void;
+  clearNotifications: () => void;
 }
 
 const generateId = (prefix: string) => `${prefix}${Date.now().toString().slice(-6)}`;
@@ -58,6 +73,10 @@ export const useDataStore = create<DataState>((set, get) => ({
   employees: [],
   schemes: [],
   users: [],
+  notifications: [
+    { id: 'NOTIF1', title: 'System Update', message: 'The ACEDB portal has been updated to version 2.0.', date: new Date().toISOString(), read: false, type: 'info' },
+    { id: 'NOTIF2', title: 'Data Seeded', message: 'Initial sample data has been seeded successfully.', date: new Date(Date.now() - 86400000).toISOString(), read: true, type: 'success' }
+  ],
   isLoading: false,
   error: null,
 
@@ -95,6 +114,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'add', sheet: 'Employees', payload: newEmp }),
       });
+      get().addNotification({ title: 'Employee Added', message: `${newEmp.name} has been added.`, type: 'success' });
     } catch (e) { console.error(e); get().fetchData(); }
   },
   
@@ -109,6 +129,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'update', sheet: 'Employees', payload: emp }),
       });
+      get().addNotification({ title: 'Employee Updated', message: `Employee record updated.`, type: 'info' });
     } catch (e) { console.error(e); get().fetchData(); }
   },
 
@@ -120,6 +141,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'delete', sheet: 'Employees', payload: { id } }),
       });
+      get().addNotification({ title: 'Employee Deleted', message: `Employee record removed.`, type: 'warning' });
     } catch (e) { console.error(e); get().fetchData(); }
   },
 
@@ -132,6 +154,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'add', sheet: 'Schemes', payload: newScheme }),
       });
+      get().addNotification({ title: 'Scheme Added', message: `${newScheme.name} has been created.`, type: 'success' });
     } catch (e) { console.error(e); get().fetchData(); }
   },
 
@@ -169,6 +192,7 @@ export const useDataStore = create<DataState>((set, get) => ({
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'add', sheet: 'Users', payload: newUser }),
       });
+      get().addNotification({ title: 'User Added', message: `${newUser.name} has been granted access.`, type: 'success' });
     } catch (e) { console.error(e); get().fetchData(); }
   },
 
@@ -196,4 +220,24 @@ export const useDataStore = create<DataState>((set, get) => ({
       });
     } catch (e) { console.error(e); get().fetchData(); }
   },
+
+  addNotification: (notification) => {
+    const newNotif: AppNotification = {
+      ...notification,
+      id: generateId('NOTIF'),
+      date: new Date().toISOString(),
+      read: false
+    };
+    set((state) => ({ notifications: [newNotif, ...state.notifications] }));
+  },
+
+  markNotificationRead: (id) => {
+    set((state) => ({
+      notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+    }));
+  },
+
+  clearNotifications: () => {
+    set({ notifications: [] });
+  }
 }));
