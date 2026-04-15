@@ -6,6 +6,8 @@ import { Login } from './pages/Login';
 import { InternalDashboard } from './pages/InternalDashboard';
 import { Employees } from './pages/Employees';
 import { Settings } from './pages/Settings';
+import { Schemes } from './pages/Schemes';
+import { Users } from './pages/Users';
 import { useAuthStore } from './store/authStore';
 
 // Protected Route Wrapper
@@ -34,6 +36,16 @@ export default function App() {
           <Route path="employees" element={
             <ProtectedRoute>
               <Employees />
+            </ProtectedRoute>
+          } />
+          <Route path="schemes" element={
+            <ProtectedRoute>
+              <Schemes />
+            </ProtectedRoute>
+          } />
+          <Route path="users" element={
+            <ProtectedRoute>
+              <Users />
             </ProtectedRoute>
           } />
           <Route path="settings" element={

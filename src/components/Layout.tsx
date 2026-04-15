@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useDataStore } from '../store/dataStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   LayoutDashboard, 
@@ -10,13 +11,22 @@ import {
   Building2, 
   FileText,
   Bell,
-  Settings
+  Settings,
+  FolderKanban,
+  ShieldCheck
 } from 'lucide-react';
 
 export function Layout() {
   const { user, isAuthenticated, logout } = useAuthStore();
+  const fetchData = useDataStore(state => state.fetchData);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated, fetchData]);
 
   const handleLogout = () => {
     logout();
@@ -26,9 +36,11 @@ export function Layout() {
   const navItems = isAuthenticated ? [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Employee Registry', path: '/employees', icon: Users },
+    { name: 'Schemes', path: '/schemes', icon: FolderKanban },
+    { name: 'User Management', path: '/users', icon: ShieldCheck, restricted: ['Super Admin', 'IT Admin'] },
     { name: 'Reports', path: '/reports', icon: FileText },
     { name: 'Settings', path: '/settings', icon: Settings },
-  ] : [
+  ].filter(item => !item.restricted || (user && item.restricted.includes(user.role))) : [
     { name: 'Public Dashboard', path: '/', icon: LayoutDashboard },
   ];
 
